@@ -1,0 +1,115 @@
+<center id="heading" ><h3>Настройка</h3></center>
+<ul class="collection with-header" style="margin:50px;padding:50px;margin-left: 5%; margin-right: 5%;">
+
+    <center id="heading" ><h4>станки</h4></center>
+    <br>
+    <table class="collection-item centered" style="width:1000px;">
+    <thead>
+          <tr>
+              <th class ="left" style="width: 100px;">Станок</th>
+              <th style="width: 30px;">Панель</th>
+              <th style="width: 100px;">Связь</th>
+              <th style="width: 100px;">Тип подключения</th>
+              <th style="width: 30px;">Адрес</th>
+              <th style="width: 20px;">Редактировать</th>
+              <th style="width: 20px;">Удалить</th>
+          </tr>
+          
+
+              {{#each devices.names}}
+            <tr id={{this.name}}>
+                    
+                <td class="collection-item">{{this.name}}</td>
+                <td class="collection-item center"><div><a href="/panel/{{this.name}}" id={{this.panel.panel_adress}} class="panel"><i class="material-icons">{{this.panel_button}}</i></a></div></td>
+                <td class="collection-item">{{this.connect}}</td>
+                <td class="collection-item">{{this.type}}</td>
+                <td class="collection-item">{{this.adress}}</td>
+                <td class="collection-item center"><div><a href="/edit/{{this.name}}" id={{this.adress}} class="{{this.name}}"><i class="material-icons">edit</i></a></div></td>
+                <td class="collection-item center" ><div><a href="#!" class="{{this.name}}" onclick="del(this)"><i class="material-icons">delete</i></a></div></td>
+            </tr>
+            {{/each}}
+         <tr>
+             <td><a class="btn waves-effect waves-light left" href="/add" type="submit" name="add" id="add" style="margin:10px;">добавить<i class="material-icons right">add</i></a></td>
+         </tr>
+        </thead>
+      <tbody class="collection" id="maintable"></tbody>
+  </table>
+  <center id="heading" ><h4>WDT</h4></center>
+  <br>
+  <table class="collection-item centered" style="width:1000px;">
+    <thead>
+          <tr>
+              <th class ="left" style="width: 100px;">Название</th>
+              <th style="width: 200px;">Адрес</th>
+              <th style="width: 20px;">Редактировать</th>
+              <th style="width: 20px;">Удалить</th>
+          </tr>
+          
+
+              {{#each devices.wdt}}
+            <tr id={{this.name}}>
+                    
+                <td class="collection-item">{{this.name}}</td>
+                <td class="collection-item">{{this.adress}}</td>
+                <td class="collection-item center"><div><a href="/edit" ><i class="material-icons">edit</i></a></div></td>
+                <td class="collection-item center" ><div><a href="#!" class="{{this.name}}" onclick="del(this)"><i class="material-icons">delete</i></a></div></td>
+            </tr>
+            {{/each}}
+         <tr>
+             <td><a class="btn waves-effect waves-light left" href="/add" type="submit" name="add" id="add" style="margin:10px;">добавить<i class="material-icons right">add</i></a></td>
+         </tr>
+        </thead>
+      <tbody class="collection" id="maintable"></tbody>
+  </table>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <div class="row">
+        <div class="input-field col s3">
+            <input id="message" type="text" class="validate" name="name">
+            <span for="message" class="helper-text">Отправка в линию произвольного сообщения</span>
+        </div>
+        <a class="btn waves-effect waves-light left" name="send" id="send" style="margin:10px;">отправить<i class="material-icons right">send</i></a>   
+    </div>
+</ul>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    M.AutoInit();
+    let socket = io('http://192.168.10.228:3005');
+    socket.on('state',function (state){
+        console.log(state)
+    })
+    
+    socket.on('report',function(report){
+        console.log(report.modbusCode)
+        M.toast({html: 'modBus code'+report.modbusCode})
+    })   
+
+    function del(t){
+        socket.emit('message',{del:t.className})
+        //console.log(t.className)
+        let tr = document.getElementById(t.className)
+        tr.innerHTML=""
+    }
+
+    let panel = document.getElementsByClassName('panel')
+    for (let i = 0; i < panel.length; i++){
+        panel[i].addEventListener('click', function(){
+            console.log(panel[i])
+        })
+    }
+
+    let sendButton = document.getElementById('send')
+    sendButton.addEventListener('click',()=>{
+        let message = document.getElementById('message')
+        socket.emit('command',{anyMessage:message.value})
+        //console.log(message.value)
+    })
+
+    
+    
+    
+    
+</script>

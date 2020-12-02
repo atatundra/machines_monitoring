@@ -1,0 +1,226 @@
+
+<ul class="collection with-header" style="margin:50px;padding:50px;margin-left: 20%; margin-right: 10%;">
+    <center><h3>Настройка панели </h3></center>
+    <table class="collection-item centered" style="width:1000px;">
+    <thead>
+        
+          <tr >
+              <th class ="left" style="width: 100px;">№ Ячейки</th>
+              <th class ="left" style="width: 100px;">RFID</th>
+              <th style="width: 300px;">Оператор</th>
+              <th style="width: 20px;"> </th>
+          </tr>
+          
+            
+
+
+
+         <tr id='title'>
+             <td><a class="btn waves-effect waves-light left"  id="add" style="margin:10px;">добавить нового оператора<i class="material-icons right">add</i></a></td>
+             <td id='newOperatorName'></td>
+         </tr>
+        </thead>
+      <tbody class="collection" id="maintable"></tbody>
+  </table>
+</ul>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    M.AutoInit();
+    let socket = io('http://192.168.10.228:3005');
+    console.log( '{{machineName}}' )
+
+    socket.emit('message',{machine: '{{machineName}}' })
+    let stanok
+
+    socket.on('writeSucess',function(conf){
+        console.log('writeSucess')
+        document.location.reload(true);
+    })
+
+    
+
+    let table = document.getElementById('title')
+    socket.on('operators',(machine)=>{
+        console.log(machine)
+        console.log('operators')
+        stanok = machine
+        console.log(machine)
+        addButton.name = machine.panel.adress
+        
+        for (let operator of machine.panel.operators){
+            if(operator!=null){
+                let tr = document.createElement('tr')
+                tr.className = 'operators'
+                let td1 = document.createElement('td')
+                td1.className = "collection-item"
+                td1.innerHTML = operator.cell
+                tr.append(td1)
+                let td2 = document.createElement('td')
+                td2.className = "collection-item"
+                td2.innerHTML = operator.RFID.toUpperCase()
+                tr.append(td2)
+                let td3 = document.createElement('td')
+                td3.className = "collection-item"
+                td3.innerHTML = operator.operator
+                tr.append(td3)
+                let td4 = document.createElement('td')
+                td4.className = "collection-item"
+                let del = document.createElement('div')
+                
+                del.id = operator.cell
+                td4.append(del)
+                let a = document.createElement('a')
+                
+                a.href = "#!"
+                del.append(a)
+                let i = document.createElement('i')
+                i.className = "material-icons"
+                i.innerHTML = "delete"
+                a.append(i)
+
+                //td4.innerHTML = "<div><a href=\"#!\"  onclick=\"del(this)\"><i class=\"material-icons\">delete</i></a></div>"
+                tr.append(td4)
+                
+                table.before(tr)
+
+                del.addEventListener('click', function(){
+                    socket.emit('command',{writeOperator:
+                            {
+                                RFID: 0xffffffff,
+                                name: 0xff,
+                                panelAdress: machine.panel.adress,
+                                machineIndex: machine.index,
+                                cellNumber: +this.id
+                            }
+                        })
+                        let circle = document.createElement('div')
+                        circle.className = "preloader-wrapper small active"
+                        circle.innerHTML = " <div class=\"spinner-layer spinner-green-only\"><div class=\"circle-clipper left\"><div class=\"circle\"></div></div><div class=\"gap-patch\"><div class=\"circle\"></div></div><div class=\"circle-clipper right\"><div class=\"circle\"></div></div></div>"
+                        del.replaceWith(circle)
+                    //console.log(this.id)
+                })
+
+            }
+            
+            
+        }
+
+        
+    })
+
+
+
+    let addButton = document.getElementById('add')
+    addButton.addEventListener('click',addClick)
+    function addClick(){
+            console.log('add')            
+            console.log(addButton)
+            socket.emit('command',{waitRFID:+addButton.name})
+            console.log(addButton)
+            addButton.className = "btn waves-effect waves-light left red accent-3"
+            addButton.innerHTML = "приложите карту к панели в течении 15 секунд"
+            setTimeout(()=>{
+                if(addButton.className == "btn waves-effect waves-light left red accent-3"){
+                    addButton.innerHTML = "добавить нового оператора<i class=\"material-icons right\">add</i></a>"
+                    addButton.className = "btn waves-effect waves-light left"
+                }
+            },15000)
+        }
+   
+    socket.on('RFID',function(RFID){
+        
+                addButton.removeEventListener('click', addClick)
+
+                addButton.className = "btn waves-effect waves-light left green darken-1"
+                addButton.innerHTML = `RFID: ${RFID.toString(16)}`
+                M.toast({html: 'карта считана, введите имя оператора'})
+
+                let div = document.createElement("div")
+                div.className = "input-field col s12"
+
+                let input = document.createElement("input")
+                input.id = "new_name_operator"
+                input.type = "text"
+                input.className = "validate"
+                input.dataset.length = "10"
+                let lable = document.createElement("label")
+                lable.for = "new_name"
+                lable.innerHTML = "ВВЕДИТЕ ИМЯ ОПЕРАТОРА"
+
+
+                let div2 = document.createElement("div")
+                div2.className = "input-field col s12"
+
+                let input2 = document.createElement("input")
+                input2.id = "cell_number"
+                input2.type = "number"
+                input2.className = "validate"
+                let lable2 = document.createElement("label")
+                lable2.for = "cell_number"
+                lable2.innerHTML = "НОМЕР ЯЧЕЙКИ"
+
+                let button = document.createElement("a")
+                button.className = "waves-effect waves-light btn-small"
+                button.innerHTML = "Записать"
+                button.id = "write"
+                let newOperatorField = document.getElementById('newOperatorName')
+                div.append(input)
+                div.append(lable)
+                div2.append(input2)
+                div2.append(lable2)
+                div.append(button)
+
+                newOperatorField.append(div2)
+                newOperatorField.append(div)
+                
+                
+                let textNeedCount = document.getElementById("new_name_operator");
+                M.CharacterCounter.init(textNeedCount);
+                
+                //let writeButton = document.getElementById('write')
+                button.addEventListener('click', function(){
+                    console.log('write')
+                    console.log(input.value)
+                    if(input2.value.length==0){
+                        M.toast({html: 'Поле номер ячейки не должно быть пустым'})
+                    }else if(input.value.length==0){
+                        M.toast({html: 'Поле имя не должно быть пустым'})
+                    }else if(input.value.length > 10) {
+                        M.toast({html: 'Имя должно быть не более 10-ти символов'})
+                    }else{
+                        socket.emit('command',{writeOperator:
+                            {
+                                RFID: RFID,
+                                //RFID: 0x1adc6315,
+                                name: input.value,
+                                panelAdress: +addButton.name,
+                                machineIndex: stanok.index,
+                                cellNumber: +input2.value
+                            }
+                        })
+                        //[RFID,input.value,(+addButton.name),stanok.index,input2.value]})
+                        M.toast({html: 'Отправлено'})
+                        let progress = document.createElement('div')
+                        progress.className = "progress"
+                        let indeterminate = document.createElement('div')
+                        indeterminate.className = "indeterminate"
+                        progress.append(indeterminate)
+
+                        button.replaceWith(progress)
+                        
+                    }
+                    
+                   
+                    
+                })
+                
+            })
+            //socket.emit('command',{writeOperator:{  RFID: 0x2aaf8c151c,
+            //                                        name: 'Ильин',
+            //                                        panelAdress: 5,
+            //                                        machineIndex: 6,
+            //                                        cellNumber: 1       }          })
+    let inputLength = document.getElementById("input_text")
+    console.log(inputLength)   
+   
+</script>

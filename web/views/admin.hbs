@@ -1,0 +1,40 @@
+
+<ul class="collection with-header" style="margin:50px;padding:50px;margin-left: 5%; margin-right: 5%;">
+    <center id="heading" ><h3>Список пользователей</h3></center>
+    <table class="collection-item centered" style="width:1000px;">
+    <thead>
+        
+          <tr>
+              <th class ="left" style="width: 100px;">Пользователь</th>
+              <th style="width: 20px;">Удалить</th>
+          </tr>
+          
+
+              {{#each names}}
+            <tr id="users">
+                    
+                <td class="collection-item">{{this.login}}</td>
+                <td class="collection-item center" ><div><a href="/delete/{{this.login}}" class="{{this.login}}" onclick="del(this)"><i class="material-icons">delete</i></a></div></td>
+                
+            </tr>
+            {{/each}}
+         <tr>
+             <td><a class="btn waves-effect waves-light left" href="/add_user" type="submit" name="add" id="add" style="margin:10px;">добавить<i class="material-icons right">add</i></a></td>
+             
+         </tr>
+        </thead>
+      <tbody class="collection" id="maintable"></tbody>
+  </table>
+ 
+</ul>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    M.AutoInit();
+    let socket = io('http://192.168.10.228:3005');
+    socket.on('state',function (state){
+        console.log(state)
+    })
+    
+
+    
+</script>

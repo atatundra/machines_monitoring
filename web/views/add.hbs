@@ -1,0 +1,230 @@
+
+<ul class="collection with-header" style="margin:50px;padding:50px;margin-left: 25%; margin-right: 25%;">
+    <form action="/{{add}}" method="POST" id="form">
+    <center id="heading" ><h3>{{heading}}</h3></center>
+    
+        
+    <div class="row">
+        <div class="input-field col s6">
+            <input id="first_name" type="text" class="validate" name="name">
+            <span for="first_name" class="helper-text">Название станка</span>
+        </div>
+        
+      </div>
+      <div class="row">
+        <div class="input-field col s3" id="connect">
+            <label>Тип связи</label>
+            <br>
+            <p>
+                <label>
+                    <input name="connect" type="radio" value="udp-mb" class="connect" id = "udp-mb" checked />
+                    <span>udp-mb</span>
+                </label>
+            </p>
+            <p>
+                <label>
+                    <input name="connect" type="radio" value="eth" class="connect" id = "eth"/>
+                    <span>ethernet</span>
+                </label>
+            </p>
+        </div>
+        
+        <div class="input-field col s3" >
+            <label>Адрес</label>
+            <br>
+            <br>
+            <select  class="browser-default" id="adress" type="text" name="adress">
+            {{#each online}}
+                 <option value="{{this}}">{{this}}</option>            
+            {{/each}}
+            </select>
+            
+        </div>
+    </div>
+    <div class="row">
+        <div class="input-field col s3">
+            <label>Тип подключения</label>
+            <br>
+            <br>
+            <select class="browser-default" name="type" id="connect_type">
+                {{#each connect_types}}
+                    <option value="{{this}}">{{this}}</option>            
+                {{/each}}
+            </select>
+            
+        </div>
+        <div class="input-field col s3">
+        <label>Группа</label>
+        <br>
+        <br>
+        <select class="browser-default" name="group" id="group">
+            <option value="null" selected>Без группировки</option>
+            {{#each groups}}
+                    <option value="{{this}}">{{this}}</option>            
+            {{/each}}
+            
+        </select>
+        </div>
+    </div>
+    <div class="row">
+        
+        <div class="input-field col s3">
+             <label >Адрес панели</label>
+            <br>
+            <br>
+            <select  class="browser-default" id="adress_panel" type="number" class="validate" name="panel">
+                <option value="null" selected>Без панели</option>
+            {{#each online}}
+                <option value="{{this}}">{{this}}</option>            
+            {{/each}}
+            </select>
+           
+
+        </div>
+        
+    </div>
+    
+    <div class="row">
+        <div class="input-field col s6">
+            <button class="btn waves-effect waves-light right" name = "oldName" value = {{heading}} id="sub">Сохранить
+                <i class="material-icons right">done</i>
+            </button>
+        </div>
+    </div>
+    
+    </form>
+</ul>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    M.AutoInit();
+    //let socket = io();
+    let socket = io('http://192.168.10.228:3005');
+
+    //let onlineDevices;
+    let adressMB
+
+    let heading = document.getElementById('heading')
+    //console.log(heading.innerText)
+    let form = document.getElementById('form')
+
+    let submitButton = document.getElementById('sub')
+    submitButton.addEventListener('click', function(){
+        console.log(form)
+        //form.submit()
+    })
+
+    //let connect = document.getElementsByClassName('connect')
+    //console.log(connect[0]) 
+
+    socket.on('info',function(machine){
+        console.log('info')
+        console.log(machine)
+        let name = document.getElementById("first_name")
+        name.value = machine.name
+        let selected_adress = document.getElementById("adress")
+        if (machine.connect=="udp-mb"){
+            selected_adress.value = machine.adress
+        }else if(machine.connect=="eth"){
+            let eth = document.getElementById('eth')
+            eth.checked=true
+            let adress =  document.getElementById('adress');
+            input1.value=machine.adress[0]
+            input2.value=machine.adress[1]
+            adress.replaceWith(adressETH)
+        }
+        
+
+        let connect_type = document.getElementById('connect_type')
+        connect_type.value = machine.type
+        let group = document.getElementById('group')
+        if(machine.group==undefined){
+            group.value = null
+        }else{
+            group.value = machine.group
+        }
+
+        let selcted_panel_adress = document.getElementById("adress_panel")
+        if(machine.panel != null){
+            selcted_panel_adress.value = machine.panel.adress
+        }
+
+    })
+
+    socket.emit('message', {name:heading.innerText })
+    socket.on('onlineDev',function(dev){
+        console.log(dev)
+        //onlineDevices = dev
+        adressMB =  document.createElement("select")
+        adressMB.className = "browser-default"
+        adressMB.id="adress"
+        adressMB.type = "text"
+        adressMB.name = "adress"
+        for(let device of dev){
+            let option = document.createElement('option')
+            option.value = device.toString()
+            option.innerHTML = device
+            adressMB.append(option)
+        }
+        console.log(adressMB)
+    })
+    socket.emit('message', {online:'give Me please' })
+    
+
+    //let connect = document.getElementsByClassName('connect')
+    
+    
+    
+    //let adress = adressMB
+    //console.log(adress)
+    
+    let adressETH = document.createElement("div")
+    adressETH.className = "input-field col s12"
+    adressETH.id = "adress"
+    let input1 = document.createElement("input")
+    input1.name = "ip"
+    input1.id="input1"
+    input1.type = "text"
+    input1.className = "validate"
+    let label1 = document.createElement("span")
+    label1.for = "input1"
+    label1.innerHTML = "IP-адресс"
+    adressETH.append(input1)
+    adressETH.append(label1)
+    let input2 = document.createElement("input")
+    input2.name = "port"
+    input2.id="input2"
+    input2.type = "text"
+    input2.className = "validate"
+    let label2 = document.createElement("span")
+    label2.for = "input2"
+    label2.innerHTML = "port"
+    adressETH.append(input2)
+    adressETH.append(label2)
+    
+    
+    let connect =  document.getElementsByClassName('connect');
+    console.log(connect)
+    for (let connectType of connect){
+        //connectType.addEventListener('click',function(){
+            //console.log(this.checked)
+            //console.log(this.value)
+            //if(this.value == "udp-mb"){
+                //adressMB.replaceWith(adress)
+            //}else if(this.value == "eth"){
+                //adressMB.replaceWith(adressETH)
+            //}
+       //})
+        connectType.addEventListener('change',function(){
+            console.log('changed')
+            if(this.value == "udp-mb"){
+                let adress =  document.getElementById('adress');
+                adress.replaceWith(adressMB)
+            }else if(this.value == "eth"){
+                let adress =  document.getElementById('adress');
+                adress.replaceWith(adressETH)
+            }
+        })
+    }
+
+    
+</script>
